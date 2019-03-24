@@ -8,8 +8,35 @@
 GLFWwindow* window;
 
 void draw_pentagon();
+int glInit();
 
 int main() {
+	// Initialize GLFW & GLEW
+	if (glInit() != 0) {
+		return -1;
+	}
+
+	do { 
+		// Clear the screen
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		// Draw pentagon
+		draw_pentagon();		
+
+		// Swap buffers
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+	} 
+	while(glfwWindowShouldClose(window) == 0);
+
+	// Close OpenGL window and terminate GLFW
+	glfwTerminate();
+
+	return 0;
+}
+
+int glInit() {
 	// Initialise GLFW
 	if (!glfwInit()) {
 		fprintf( stderr, "Failed to initialize GLFW\n" );
@@ -34,24 +61,7 @@ int main() {
 		glfwTerminate();
 		return -1;
 	}
-
-	do { 
-		// Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		// Draw pentagon
-		draw_pentagon();		
-
-		// Swap buffers
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-
-	} 
-	while(glfwWindowShouldClose(window) == 0);
-
-	// Close OpenGL window and terminate GLFW
-	glfwTerminate();
-
+	
 	return 0;
 }
 
@@ -59,12 +69,12 @@ void draw_pentagon() {
 	// Draw pentagon
 	glBegin(GL_POLYGON);
 
-	glColor3d(1.0f, 0.0f, 0.0f);
-	glVertex2f(-0.5f, -1.0f);
-	glVertex2f(-1.0f, 0.0f);
-	glVertex2f(0.0f, 1.0f);
-	glVertex2f(1.0f, 0.0f);
-	glVertex2f(0.5f, -1.0f);
+	glColor3d(0.0f, 1.0f, 0.0f);
+	glVertex2f(-0.4f, -0.9f);
+	glVertex2f(-0.9f, 0.0f);
+	glVertex2f(0.0f, 0.9f);
+	glVertex2f(0.9f, 0.0f);
+	glVertex2f(0.4f, -0.9f);
 
 	glEnd();
 }
