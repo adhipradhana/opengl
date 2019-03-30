@@ -8,7 +8,7 @@ for line in fopen :
     if line != '\n':
         x,y = line.split(',')
         x = (int(x) - 400) / 800
-        y = (int(y) - 400) / 800
+        y = ((int(y) - 400) / 800) * -1
         fwrite.write('{},{},{}\n'.format(x, y, 0))
     else :
         fwrite.write('\n')
