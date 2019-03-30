@@ -61,7 +61,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(1000, 1000, "Unicorn", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -126,7 +126,7 @@ int main(void)
         "layout(location = 0) out vec4 color;"
         "\n"
         "void main() {\n"
-        "   color = vec4(1.0, 1.0, 1.0, 1.0);\n"
+        "   color = vec4(1.0, 0.0, 0.0, 1.0);\n"
         "}\n";
 
     unsigned int shader = CreateShader(vertexShader, fragmentShader);
