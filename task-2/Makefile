@@ -1,7 +1,9 @@
 all: ./src/main.cpp
+	python3 script.py
 	clang++ -o ./bin/main ./src/main.cpp -Wall -std=c++11 -stdlib=libc++ -lglfw -lglew -framework OpenGL
 
 run: ./src/main.cpp
+	python3 script.py
 	clang++ -o ./bin/main ./src/main.cpp -Wall -std=c++11 -stdlib=libc++ -lglfw -lglew -framework OpenGL
 	./bin/main
 
