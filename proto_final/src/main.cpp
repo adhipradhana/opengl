@@ -3,8 +3,6 @@
 
 #include <iostream>
 
-#include "kuda_test.cpp"
-
 static unsigned int CompileShader(unsigned int type, const std::string& source) {
     unsigned int id = glCreateShader(type);
     const char* src = source.c_str();
@@ -90,12 +88,6 @@ int main(void)
     std::cout << glGetString(GL_VERSION) << std::endl;
 
     /* Vertices data */
-    vector<float> input = parseImage();
-    for(int i = 0; i < input.size(); i+=2) {
-        std::cout << input[i] << " " << input[i+1] << std::endl;
-    }
-    std::cout << input.size() << std::endl;
-    float* input_arr = &input[0];
     float positions[6] = {
         -0.5f, -0.5f,
         0.0f, 0.5f,
@@ -106,7 +98,7 @@ int main(void)
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, input.size() * sizeof(float), input_arr, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
@@ -138,7 +130,7 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, input.size()/2/3);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

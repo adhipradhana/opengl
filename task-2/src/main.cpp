@@ -91,11 +91,13 @@ int main(void)
 
     /* Vertices data */
     vector<float> input = parseImage();
-    for(int i = 0; i < input.size(); i+=2) {
-        std::cout << input[i] << " " << input[i+1] << std::endl;
+    vector<float> input_color = randomColor(input.size());
+    for(int i = 0; i < input.size(); i+=6) {
+        std::cout << input[i] << " " << input[i+1] << " " << input[i+2] << " " << input[i+3] << " " << input[i+4] << " " << input[i+5] << std::endl;
     }
     std::cout << input.size() << std::endl;
     float* input_arr = &input[0];
+    float* color_arr = &input_color[0];
     float positions[6] = {
         -0.5f, -0.5f,
         0.0f, 0.5f,
@@ -108,25 +110,39 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glBufferData(GL_ARRAY_BUFFER, input.size() * sizeof(float), input_arr, GL_STATIC_DRAW);
 
+    unsigned int colorbuffer;
+    glGenBuffers(1, &colorbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+    glBufferData(GL_ARRAY_BUFFER, input_color.size() * sizeof(float), color_arr, GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
     std::string vertexShader = 
         "#version 330 core\n"
         "\n"
-        "layout(location = 0) in vec4 position;"
+        "layout(location = 0) in vec4 position;\n"
+        "layout(location = 1) in vec3 colorInput;\n"
+        "out vec3 outColor;"
         "\n"
         "void main() {\n"
         "   gl_Position = position;\n"
+        "   outColor = colorInput;\n"
         "}\n";
 
     std::string fragmentShader = 
         "#version 330 core\n"
         "\n"
-        "layout(location = 0) out vec4 color;"
+        "layout(location = 0) out vec3 color;\n"
+        "in vec3 outColor;\n"
         "\n"
         "void main() {\n"
-        "   color = vec4(1.0, 1.0, 1.0, 1.0);\n"
+        "   color = outColor;\n"
         "}\n";
 
     unsigned int shader = CreateShader(vertexShader, fragmentShader);
