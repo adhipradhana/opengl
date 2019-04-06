@@ -16,6 +16,7 @@ GLFWwindow* window;
 using namespace glm;
 
 #include "common/shader.hpp"
+#include "common/texture.hpp"
 #include "common/controls.hpp"
 #include "common/objloader.hpp"
 
@@ -79,16 +80,22 @@ int main( void )
 	glBindVertexArray(VertexArrayID);
 
 	// Create and compile our GLSL program from the shaders
-	GLuint programID = LoadShaders( "shader/TransformVertexShader.vertexshader", "shader/ColorFragmentShader.fragmentshader" );
+	GLuint programID = LoadShaders( "shader/TransformVertexShader.vertexshader", "shader/TextureFragmentShader.fragmentshader" );
 
 	// Get a handle for our "MVP" uniform
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+
+	// Load the texture
+	GLuint Texture = loadDDS("model/bajaj.DDS");
+	
+	// Get a handle for our "myTextureSampler" uniform
+	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
 
 	// Read our .obj file
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec2> uvs;
 	std::vector<glm::vec3> normals; // Won't be used at the moment.
-	bool res = loadOBJ("model/cube.obj", vertices, uvs, normals);
+	bool res = loadOBJ("model/bajaj.obj", vertices, uvs, normals);
 
 	// Load it into a VBO
 
@@ -121,6 +128,12 @@ int main( void )
 		// in the "MVP" uniform
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
+		// Bind our texture in Texture Unit 0
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, Texture);
+		// Set our "myTextureSampler" sampler to use Texture Unit 0
+		glUniform1i(TextureID, 0);
+
 		// 1rst attribute buffer : vertices
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -133,7 +146,7 @@ int main( void )
 			(void*)0            // array buffer offset
 		);
 
-		// 2nd attribute buffer : color
+		// 2nd attribute buffer : UVs
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
 		glVertexAttribPointer(
@@ -163,6 +176,7 @@ int main( void )
 	glDeleteBuffers(1, &vertexbuffer);
 	glDeleteBuffers(1, &uvbuffer);
 	glDeleteProgram(programID);
+	glDeleteTextures(1, &Texture);
 	glDeleteVertexArrays(1, &VertexArrayID);
 
 	// Close OpenGL window and terminate GLFW
