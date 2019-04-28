@@ -11,7 +11,7 @@ in vec3 LightDirection_cameraspace;
 out vec3 color;
 
 // Values that stay constant for the whole mesh.
-uniform sampler2D myTextureSampler;
+uniform sampler2D bajaj_texture;
 uniform mat4 MV;
 uniform vec3 LightPosition_worldspace;
 
@@ -26,7 +26,7 @@ void main(){
 	vec3 l = normalize( LightDirection_cameraspace );
 
 	// Material properties
-	vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;
+	vec3 MaterialDiffuseColor = texture( bajaj_texture, UV ).rgb;
 	vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
 	vec3 MaterialSpecularColor = vec3(0.3,0.3,0.3);
 
@@ -58,6 +58,4 @@ void main(){
 		// Specular : reflective highlight, like a mirror
 		MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distance*distance);
 
-	// Output color = color of the texture at the specified UV
-	//color = texture( myTextureSampler, UV ).rgb;
 }

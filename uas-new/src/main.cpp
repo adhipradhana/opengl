@@ -18,6 +18,7 @@ using namespace glm;
 #include "common/shader.hpp"
 #include "common/texture.hpp"
 #include "common/controls.hpp"
+#include "common/objloader.hpp"
 
 // CPU representation of a particle
 struct Particle{
@@ -80,7 +81,7 @@ int main( void )
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Open a window and create its OpenGL context
-	window = glfwCreateWindow( 1024, 768, "Tutorial 18 - Particules", NULL, NULL);
+	window = glfwCreateWindow( 1024, 768, "UAS OpenGL", NULL, NULL);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 		getchar();
@@ -121,17 +122,23 @@ int main( void )
 
 
 	// Create and compile our GLSL program from the shaders
-	GLuint programID = LoadShaders( "src/Particle.vertexshader", "src/Particle.fragmentshader" );
+	GLuint rainProgramID = LoadShaders( "shader/Particle.vertexshader", "shader/Particle.fragmentshader");
+	// GLuint bajajProgramID = LoadShaders( "shader/TransformVertexShader.vertexshader", "shader/TextureFragmentShader.fragmentshader");
 
-	// Vertex shader
-	GLuint CameraRight_worldspace_ID  = glGetUniformLocation(programID, "CameraRight_worldspace");
-	GLuint CameraUp_worldspace_ID  = glGetUniformLocation(programID, "CameraUp_worldspace");
-	GLuint ViewProjMatrixID = glGetUniformLocation(programID, "VP");
+	// Vertex shader of rain
+	GLuint CameraRight_worldspace_ID  = glGetUniformLocation(rainProgramID, "CameraRight_worldspace");
+	GLuint CameraUp_worldspace_ID  = glGetUniformLocation(rainProgramID, "CameraUp_worldspace");
+	GLuint ViewProjMatrixID = glGetUniformLocation(rainProgramID, "VP");
+
+	// Vertex shader of bajaj
+	// GLuint MatrixID = glGetUniformLocation(bajajProgramID, "MVP");
+	// GLuint ViewMatrixID = glGetUniformLocation(bajajProgramID, "V");
+	// GLuint ModelMatrixID = glGetUniformLocation(bajajProgramID, "M");
 
 	// fragment shader
-	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
+	GLuint TextureRainID  = glGetUniformLocation(rainProgramID, "rain_texture");
+	// GLuint TextureBajajID  = glGetUniformLocation(bajajProgramID, "bajaj_texture");
 
-	
 	static GLfloat* g_particule_position_size_data = new GLfloat[MaxParticles * 4];
 	static GLubyte* g_particule_color_data         = new GLubyte[MaxParticles * 4];
 
@@ -140,8 +147,14 @@ int main( void )
 		ParticlesContainer[i].cameradistance = -1.0f;
 	}
 
+	GLuint TextureRain = loadDDS("model/particle.DDS");
+	// GLuint TextureBajaj = loadBMP_custom("model/bajaj.bmp");
 
-	GLuint Texture = loadDDS("src/particle.DDS");
+	// Read our .obj file
+	// std::vector<glm::vec3> vertices;
+	// std::vector<glm::vec2> uvs;
+	// std::vector<glm::vec3> normals; // Won't be used at the moment.
+	// bool res = loadOBJ("model/bajaj.obj", vertices, uvs, normals);
 
 	// The VBO containing the 4 vertices of the particles.
 	// Thanks to instancing, they will be shared by all particles.
@@ -170,6 +183,25 @@ int main( void )
 	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
 	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
 
+	// Load it into a VBO
+	// GLuint vertexbuffer;
+	// glGenBuffers(1, &vertexbuffer);
+	// glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	// glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+
+	// GLuint uvbuffer;
+	// glGenBuffers(1, &uvbuffer);
+	// glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+	// glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+
+	// GLuint normalbuffer;
+ 	// glGenBuffers(1, &normalbuffer);
+ 	// glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+ 	// glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
+
+	// glUseProgram(bajajProgramID);
+	// glUseProgram(rainProgramID);
+	// GLuint LightID = glGetUniformLocation(bajajProgramID, "LightPosition_worldspace");
 
 	
 	double lastTime = glfwGetTime();
@@ -182,18 +214,28 @@ int main( void )
 		double delta = currentTime - lastTime;
 		lastTime = currentTime;
 
+		// Compute the MVP matrix from keyboard and mouse input
 		computeMatricesFromInputs();
 		glm::mat4 ProjectionMatrix = getProjectionMatrix();
 		glm::mat4 ViewMatrix = getViewMatrix();
+		// glm::mat4 ModelMatrix = glm::mat4(1.0);
+		// glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+		// Send our transformation to the currently bound shader, 
+		// in the "MVP" uniform
+		// glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+		// glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+		// glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
 		// We will need the camera's position in order to sort the particles
 		// w.r.t the camera's distance.
 		// There should be a getCameraPosition() function in common/controls.cpp, 
 		// but this works too.
 		glm::vec3 CameraPosition(glm::inverse(ViewMatrix)[3]);
-
 		glm::mat4 ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
 
+		// glm::vec3 lightPos = glm::vec3(4,4,4);
+		// glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
 		// Generate 10 new particule each millisecond,
 		// but limit this to 16 ms (60 fps), or if you have 1 long frame (1sec),
@@ -205,7 +247,7 @@ int main( void )
 		for(int i = 0; i < newparticles; i++){
 			int particleIndex = FindUnusedParticle();
 			ParticlesContainer[particleIndex].life = 2.0f; // This particle will live 5 seconds.
-			ParticlesContainer[particleIndex].pos = glm::vec3(rand() % 500 , 10.0f, rand() % 500);
+			ParticlesContainer[particleIndex].pos = glm::vec3((rand() % 500) - 250 , 10.0f, (rand() % 500) - 250);
 
 			float spread = 1.5f;
 			glm::vec3 maindir = glm::vec3(0.0f, -10.0f, 0.0f);
@@ -227,8 +269,7 @@ int main( void )
 			ParticlesContainer[particleIndex].b = 247;
 			ParticlesContainer[particleIndex].a = 255;
 
-			ParticlesContainer[particleIndex].size = (rand()%1000)/2000.0f + 0.1f;
-			
+			ParticlesContainer[particleIndex].size = (rand()%1000)/2000.0f + 0.1f;	
 		}
 
 
@@ -269,7 +310,6 @@ int main( void )
 				}
 
 				ParticlesCount++;
-
 			}
 		}
 
@@ -287,13 +327,20 @@ int main( void )
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// Use our shader
-		glUseProgram(programID);
+		// glUseProgram(bajajProgramID);
+		glUseProgram(rainProgramID);
+
 
 		// Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, Texture);
+		glBindTexture(GL_TEXTURE_2D, TextureRain);
 		// Set our "myTextureSampler" sampler to use Texture Unit 0
-		glUniform1i(TextureID, 0);
+		glUniform1i(TextureRainID, 0);
+
+		// Bind our texture in Texture Unit 0
+		// glActiveTexture(GL_TEXTURE0 + 1);
+		// glBindTexture(GL_TEXTURE_2D, TextureBajaj);
+		// glUniform1i(TextureBajajID, 1);
 
 		// Same as the billboards tutorial
 		glUniform3f(CameraRight_worldspace_ID, ViewMatrix[0][0], ViewMatrix[1][0], ViewMatrix[2][0]);
@@ -337,6 +384,42 @@ int main( void )
 			(void*)0                          // array buffer offset
 		);
 
+		// 4rst attribute buffer : vertices
+		// glEnableVertexAttribArray(3);
+		// glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+		// glVertexAttribPointer(
+		// 	3,                  // attribute
+		// 	3,                  // size
+		// 	GL_FLOAT,           // type
+		// 	GL_FALSE,           // normalized?
+		// 	0,                  // stride
+		// 	(void*)0            // array buffer offset
+		// );
+
+		// // 5nd attribute buffer : UVs
+		// glEnableVertexAttribArray(4);
+		// glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+		// glVertexAttribPointer(
+		// 	4,                                // attribute
+		// 	2,                                // size
+		// 	GL_FLOAT,                         // type
+		// 	GL_FALSE,                         // normalized?
+		// 	0,                                // stride
+		// 	(void*)0                          // array buffer offset
+		// );
+
+		//  // 6rd attribute buffer : normals
+		// glEnableVertexAttribArray(5);
+		// glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+		// glVertexAttribPointer(
+		// 	5,                                // attribute
+		// 	3,                                // size
+		// 	GL_FLOAT,                         // type
+		// 	GL_FALSE,                         // normalized?
+		// 	0,                                // stride
+		// 	(void*)0                          // array buffer offset
+		// );
+
 		// These functions are specific to glDrawArrays*Instanced*.
 		// The first parameter is the attribute buffer we're talking about.
 		// The second parameter is the "rate at which generic vertex attributes advance when rendering multiple instances"
@@ -344,17 +427,20 @@ int main( void )
 		glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
 		glVertexAttribDivisor(1, 1); // positions : one per quad (its center)                 -> 1
 		glVertexAttribDivisor(2, 1); // color : one per quad                                  -> 1
-
+		
 		// Draw the particules !
 		// This draws many times a small triangle_strip (which looks like a quad).
 		// This is equivalent to :
 		// for(i in ParticlesCount) : glDrawArrays(GL_TRIANGLE_STRIP, 0, 4), 
 		// but faster.
 		glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, ParticlesCount);
+		// glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
+		// glDisableVertexAttribArray(3);
+		// glDisableVertexAttribArray(4);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -371,11 +457,14 @@ int main( void )
 	glDeleteBuffers(1, &particles_color_buffer);
 	glDeleteBuffers(1, &particles_position_buffer);
 	glDeleteBuffers(1, &billboard_vertex_buffer);
-	glDeleteProgram(programID);
-	glDeleteTextures(1, &Texture);
+	// glDeleteBuffers(1, &vertexbuffer);
+	// glDeleteBuffers(1, &uvbuffer);
+	glDeleteProgram(rainProgramID);
+	// glDeleteProgram(bajajProgramID);
+	glDeleteTextures(1, &TextureRain);
+	// glDeleteTextures(1, &TextureBajaj);
 	glDeleteVertexArrays(1, &VertexArrayID);
 	
-
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
 
