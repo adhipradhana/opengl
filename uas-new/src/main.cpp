@@ -123,7 +123,7 @@ int main( void )
 
 	// Create and compile our GLSL program from the shaders
 	GLuint rainProgramID = LoadShaders( "shader/Particle.vertexshader", "shader/Particle.fragmentshader");
-	// GLuint bajajProgramID = LoadShaders( "shader/TransformVertexShader.vertexshader", "shader/TextureFragmentShader.fragmentshader");
+	GLuint bajajProgramID = LoadShaders( "shader/TransformVertexShader.vertexshader", "shader/TextureFragmentShader.fragmentshader");
 
 	// Vertex shader of rain
 	GLuint CameraRight_worldspace_ID  = glGetUniformLocation(rainProgramID, "CameraRight_worldspace");
@@ -131,13 +131,13 @@ int main( void )
 	GLuint ViewProjMatrixID = glGetUniformLocation(rainProgramID, "VP");
 
 	// Vertex shader of bajaj
-	// GLuint MatrixID = glGetUniformLocation(bajajProgramID, "MVP");
-	// GLuint ViewMatrixID = glGetUniformLocation(bajajProgramID, "V");
-	// GLuint ModelMatrixID = glGetUniformLocation(bajajProgramID, "M");
+	GLuint MatrixID = glGetUniformLocation(bajajProgramID, "MVP");
+	GLuint ViewMatrixID = glGetUniformLocation(bajajProgramID, "V");
+	GLuint ModelMatrixID = glGetUniformLocation(bajajProgramID, "M");
 
 	// fragment shader
 	GLuint TextureRainID  = glGetUniformLocation(rainProgramID, "rain_texture");
-	// GLuint TextureBajajID  = glGetUniformLocation(bajajProgramID, "bajaj_texture");
+	GLuint TextureBajajID  = glGetUniformLocation(bajajProgramID, "bajaj_texture");
 
 	static GLfloat* g_particule_position_size_data = new GLfloat[MaxParticles * 4];
 	static GLubyte* g_particule_color_data         = new GLubyte[MaxParticles * 4];
@@ -148,13 +148,13 @@ int main( void )
 	}
 
 	GLuint TextureRain = loadDDS("model/particle.DDS");
-	// GLuint TextureBajaj = loadBMP_custom("model/bajaj.bmp");
+	GLuint TextureBajaj = loadBMP_custom("model/bajaj.bmp");
 
 	// Read our .obj file
-	// std::vector<glm::vec3> vertices;
-	// std::vector<glm::vec2> uvs;
-	// std::vector<glm::vec3> normals; // Won't be used at the moment.
-	// bool res = loadOBJ("model/bajaj.obj", vertices, uvs, normals);
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec2> uvs;
+	std::vector<glm::vec3> normals; // Won't be used at the moment.
+	bool res = loadOBJ("model/bajaj.obj", vertices, uvs, normals);
 
 	// The VBO containing the 4 vertices of the particles.
 	// Thanks to instancing, they will be shared by all particles.
@@ -184,24 +184,22 @@ int main( void )
 	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
 
 	// Load it into a VBO
-	// GLuint vertexbuffer;
-	// glGenBuffers(1, &vertexbuffer);
-	// glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	// glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+	GLuint vertexbuffer;
+	glGenBuffers(1, &vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
 
-	// GLuint uvbuffer;
-	// glGenBuffers(1, &uvbuffer);
-	// glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-	// glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+	GLuint uvbuffer;
+	glGenBuffers(1, &uvbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
 
-	// GLuint normalbuffer;
- 	// glGenBuffers(1, &normalbuffer);
- 	// glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
- 	// glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
+	GLuint normalbuffer;
+ 	glGenBuffers(1, &normalbuffer);
+ 	glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+ 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
 
-	// glUseProgram(bajajProgramID);
-	// glUseProgram(rainProgramID);
-	// GLuint LightID = glGetUniformLocation(bajajProgramID, "LightPosition_worldspace");
+	GLuint LightID = glGetUniformLocation(bajajProgramID, "LightPosition_worldspace");
 
 	
 	double lastTime = glfwGetTime();
@@ -209,6 +207,8 @@ int main( void )
 	{
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glUseProgram(rainProgramID);
 
 		double currentTime = glfwGetTime();
 		double delta = currentTime - lastTime;
@@ -218,14 +218,8 @@ int main( void )
 		computeMatricesFromInputs();
 		glm::mat4 ProjectionMatrix = getProjectionMatrix();
 		glm::mat4 ViewMatrix = getViewMatrix();
-		// glm::mat4 ModelMatrix = glm::mat4(1.0);
-		// glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
-		// Send our transformation to the currently bound shader, 
-		// in the "MVP" uniform
-		// glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-		// glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
-		// glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+		glm::mat4 ModelMatrix = glm::mat4(1.0);
+		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
 		// We will need the camera's position in order to sort the particles
 		// w.r.t the camera's distance.
@@ -233,9 +227,6 @@ int main( void )
 		// but this works too.
 		glm::vec3 CameraPosition(glm::inverse(ViewMatrix)[3]);
 		glm::mat4 ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
-
-		// glm::vec3 lightPos = glm::vec3(4,4,4);
-		// glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
 		// Generate 10 new particule each millisecond,
 		// but limit this to 16 ms (60 fps), or if you have 1 long frame (1sec),
@@ -271,8 +262,6 @@ int main( void )
 
 			ParticlesContainer[particleIndex].size = (rand()%1000)/2000.0f + 0.1f;	
 		}
-
-
 
 		// Simulate all particles
 		int ParticlesCount = 0;
@@ -326,21 +315,10 @@ int main( void )
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Use our shader
-		// glUseProgram(bajajProgramID);
-		glUseProgram(rainProgramID);
-
-
 		// Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, TextureRain);
-		// Set our "myTextureSampler" sampler to use Texture Unit 0
 		glUniform1i(TextureRainID, 0);
-
-		// Bind our texture in Texture Unit 0
-		// glActiveTexture(GL_TEXTURE0 + 1);
-		// glBindTexture(GL_TEXTURE_2D, TextureBajaj);
-		// glUniform1i(TextureBajajID, 1);
 
 		// Same as the billboards tutorial
 		glUniform3f(CameraRight_worldspace_ID, ViewMatrix[0][0], ViewMatrix[1][0], ViewMatrix[2][0]);
@@ -384,42 +362,6 @@ int main( void )
 			(void*)0                          // array buffer offset
 		);
 
-		// 4rst attribute buffer : vertices
-		// glEnableVertexAttribArray(3);
-		// glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		// glVertexAttribPointer(
-		// 	3,                  // attribute
-		// 	3,                  // size
-		// 	GL_FLOAT,           // type
-		// 	GL_FALSE,           // normalized?
-		// 	0,                  // stride
-		// 	(void*)0            // array buffer offset
-		// );
-
-		// // 5nd attribute buffer : UVs
-		// glEnableVertexAttribArray(4);
-		// glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-		// glVertexAttribPointer(
-		// 	4,                                // attribute
-		// 	2,                                // size
-		// 	GL_FLOAT,                         // type
-		// 	GL_FALSE,                         // normalized?
-		// 	0,                                // stride
-		// 	(void*)0                          // array buffer offset
-		// );
-
-		//  // 6rd attribute buffer : normals
-		// glEnableVertexAttribArray(5);
-		// glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-		// glVertexAttribPointer(
-		// 	5,                                // attribute
-		// 	3,                                // size
-		// 	GL_FLOAT,                         // type
-		// 	GL_FALSE,                         // normalized?
-		// 	0,                                // stride
-		// 	(void*)0                          // array buffer offset
-		// );
-
 		// These functions are specific to glDrawArrays*Instanced*.
 		// The first parameter is the attribute buffer we're talking about.
 		// The second parameter is the "rate at which generic vertex attributes advance when rendering multiple instances"
@@ -433,14 +375,72 @@ int main( void )
 		// This is equivalent to :
 		// for(i in ParticlesCount) : glDrawArrays(GL_TRIANGLE_STRIP, 0, 4), 
 		// but faster.
+		// Use our shader
 		glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, ParticlesCount);
-		// glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
-		// glDisableVertexAttribArray(3);
-		// glDisableVertexAttribArray(4);
+		/*
+			BAJAJ CODE
+		*/
+
+		// Send our transformation to the currently bound shader, 
+		// in the "MVP" uniform
+		glUseProgram(bajajProgramID);
+
+		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+		glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+
+		glm::vec3 lightPos = glm::vec3(4,4,4);
+		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+
+		// Bind our texture in Texture Unit 0
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_2D, TextureBajaj);
+		glUniform1i(TextureBajajID, 1);
+
+		// 4TH attribute buffer : vertices
+		glEnableVertexAttribArray(3);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+		glVertexAttribPointer(
+			3,                  // attribute
+			3,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+		);
+
+		// 5th attribute buffer : UVs
+		glEnableVertexAttribArray(4);
+		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+		glVertexAttribPointer(
+			4,                                // attribute
+			2,                                // size
+			GL_FLOAT,                         // type
+			GL_FALSE,                         // normalized?
+			0,                                // stride
+			(void*)0                          // array buffer offset
+		);
+
+		 // 6th attribute buffer : normals
+		glEnableVertexAttribArray(5);
+		glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+		glVertexAttribPointer(
+			5,                                // attribute
+			3,                                // size
+			GL_FLOAT,                         // type
+			GL_FALSE,                         // normalized?
+			0,                                // stride
+			(void*)0                          // array buffer offset
+		);
+
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
+
+		glDisableVertexAttribArray(3);
+		glDisableVertexAttribArray(4);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -457,12 +457,12 @@ int main( void )
 	glDeleteBuffers(1, &particles_color_buffer);
 	glDeleteBuffers(1, &particles_position_buffer);
 	glDeleteBuffers(1, &billboard_vertex_buffer);
-	// glDeleteBuffers(1, &vertexbuffer);
-	// glDeleteBuffers(1, &uvbuffer);
+	glDeleteBuffers(1, &vertexbuffer);
+	glDeleteBuffers(1, &uvbuffer);
 	glDeleteProgram(rainProgramID);
-	// glDeleteProgram(bajajProgramID);
+	glDeleteProgram(bajajProgramID);
 	glDeleteTextures(1, &TextureRain);
-	// glDeleteTextures(1, &TextureBajaj);
+	glDeleteTextures(1, &TextureBajaj);
 	glDeleteVertexArrays(1, &VertexArrayID);
 	
 	// Close OpenGL window and terminate GLFW
